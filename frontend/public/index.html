@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Consulta aulas universitarias y reservas en SmartCampus."
+    >
+    <meta name="theme-color" content="#f5f9ff">
+    <title>SmartCampus | Espacios universitarios</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#" aria-label="SmartCampus, inicio">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M5 13.5 16 5l11 8.5V27H5V13.5Z" />
+              <path d="M12 27v-8h8v8M10 14h.01M16 14h.01M22 14h.01" />
+            </svg>
+          </span>
+          <span>Smart<span class="brand-accent">Campus</span></span>
+        </a>
+
+        <nav class="main-nav" aria-label="Navegación principal">
+          <a href="#aulas">Aulas</a>
+          <a href="#reservas">Reservas</a>
+        </nav>
+
+        <a class="header-link" href="#aulas">
+          Espacios del campus
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="contenido">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-dot"></span> UNIVERSIDAD · ESPACIOS</p>
+          <h1 id="hero-title">Tu campus,<br><span>mejor conectado.</span></h1>
+          <p class="hero-description">
+            Consulta las aulas disponibles y revisa las reservas del campus
+            desde un solo lugar.
+          </p>
+          <a class="primary-button" href="#aulas">
+            Explorar aulas
+            <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-orbit orbit-one"></div>
+          <div class="art-orbit orbit-two"></div>
+          <div class="campus-card">
+            <div class="campus-card-top">
+              <span class="campus-card-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M3 10 12 3l9 7v11H3V10Z" />
+                  <path d="M9 21v-7h6v7M7 11h.01M12 11h.01M17 11h.01" />
+                </svg>
+              </span>
+              <span class="campus-card-label">SMARTCAMPUS</span>
+              <span class="campus-card-dot"></span>
+            </div>
+            <div class="campus-illustration">
+              <div class="building building-back">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="building building-main">
+                <div class="building-roof"></div>
+                <div class="building-windows">
+                  <i></i><i></i><i></i><i></i><i></i><i></i>
+                  <i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="building-door"></div>
+              </div>
+              <div class="tree tree-left"><i></i></div>
+              <div class="tree tree-right"><i></i></div>
+              <div class="ground-line"></div>
+            </div>
+            <div class="campus-card-bottom">
+              <span>Espacios para aprender</span>
+              <span class="card-arrow" aria-hidden="true">↗</span>
+            </div>
+          </div>
+          <span class="hero-sparkle sparkle-one">✳</span>
+          <span class="hero-sparkle sparkle-two">✳</span>
+        </div>
+      </section>
+
+      <section class="content-section rooms-section" id="aulas" aria-labelledby="rooms-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow section-eyebrow">ESPACIOS UNIVERSITARIOS</p>
+            <h2 id="rooms-title">Aulas disponibles</h2>
+            <p class="section-description">
+              Encuentra el espacio adecuado para tus clases y actividades.
+            </p>
+          </div>
+          <span class="section-index" aria-hidden="true">01 / 02</span>
+        </div>
+
+        <div class="data-panel">
+          <p class="loading-message" data-state="loading" role="status" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            Cargando aulas…
+          </p>
+          <div class="state-message error-message" data-state="error" role="alert" hidden>
+            <span class="state-icon" aria-hidden="true">!</span>
+            <div>
+              <strong>No se pudieron cargar las aulas</strong>
+              <p data-error-message></p>
+            </div>
+          </div>
+          <div class="state-message empty-message" data-state="empty" role="status" hidden>
+            <span class="state-icon" aria-hidden="true">⌂</span>
+            <div>
+              <strong>No hay aulas registradas</strong>
+              <p>Cuando haya aulas disponibles, aparecerán aquí.</p>
+            </div>
+          </div>
+          <div
+            class="card-grid room-grid"
+            data-state="results"
+            data-room-list
+            aria-live="polite"
+            aria-busy="true"
+          ></div>
+        </div>
+      </section>
+
+      <section class="content-section bookings-section" id="reservas" aria-labelledby="bookings-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow section-eyebrow">ACTIVIDAD DEL CAMPUS</p>
+            <h2 id="bookings-title">Reservas</h2>
+            <p class="section-description">
+              Consulta quién utiliza cada espacio y en qué horario.
+            </p>
+          </div>
+          <span class="section-index" aria-hidden="true">02 / 02</span>
+        </div>
+
+        <div class="data-panel">
+          <p class="loading-message" data-state="loading" role="status" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            Cargando reservas…
+          </p>
+          <div class="state-message error-message" data-state="error" role="alert" hidden>
+            <span class="state-icon" aria-hidden="true">!</span>
+            <div>
+              <strong>No se pudieron cargar las reservas</strong>
+              <p data-error-message></p>
+            </div>
+          </div>
+          <div class="state-message empty-message" data-state="empty" role="status" hidden>
+            <span class="state-icon" aria-hidden="true">◷</span>
+            <div>
+              <strong>No hay reservas registradas</strong>
+              <p>Cuando haya reservas, aparecerán aquí.</p>
+            </div>
+          </div>
+          <div
+            class="booking-list"
+            data-state="results"
+            data-booking-list
+            aria-live="polite"
+            aria-busy="true"
+          ></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="brand footer-brand" href="#" aria-label="SmartCampus, inicio">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M5 13.5 16 5l11 8.5V27H5V13.5Z" />
+            <path d="M12 27v-8h8v8M10 14h.01M16 14h.01M22 14h.01" />
+          </svg>
+        </span>
+        <span>Smart<span class="brand-accent">Campus</span></span>
+      </a>
+      <p>Espacios universitarios, más cerca.</p>
+      <a class="back-to-top" href="#contenido">Volver arriba ↑</a>
+    </footer>
+  </body>
+</html>
