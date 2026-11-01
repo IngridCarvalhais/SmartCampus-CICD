@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartcampus-config
+  namespace: smartcampus
+data:
+  APP_ENV: "production"
+  POSTGRES_DB: "smartcampus"
+  POSTGRES_HOST: "postgresql"
+  POSTGRES_PORT: "5432"
