@@ -206,31 +206,44 @@ No uses las credenciales de ejemplo en un entorno compartido o expuesto. `.env`
 no se versiona. `docker compose down` conserva los volúmenes; no ejecutes
 `docker compose down -v` si necesitas conservar los datos.
 
-## GitHub Actions, Secrets y despliegue
+## GitHub Actions, matrix, Secrets y despliegue
 
-`.github/workflows/ci-cd.yml` se ejecuta en `push` y `pull_request`. Prueba
-Python 3.11 y 3.12, instala dependencias, ejecuta Ruff y pytest, valida Compose,
-construye backend y frontend, y arranca un contenedor temporal para comprobar
-su healthcheck. No publica imágenes ni despliega desde runners temporales.
+El workflow se encuentra en `.github/workflows/ci-cd.yml` y se activa con eventos `push` y `pull_request`. El pipeline realiza checkout, instalación de dependencias, comprobaciones de calidad con Ruff, pruebas con pytest, validación de Docker Compose, construcción de imágenes y verificación de ejecución. La matriz de pruebas cubre **Python 3.11 y 3.12**.
 
-El job de CI usa el Secret administrado por GitHub `GITHUB_TOKEN` para una
-consulta autenticada de solo lectura; el valor no se imprime ni se guarda en el
-repositorio. Para PostgreSQL en un despliegue, `DATABASE_URL` puede guardarse
-como Secret del entorno `production`.
+### Variables y secretos
 
-El job opcional de despliegue solo se habilita en un `push` a `main` cuando la
-variable de repositorio `DEPLOY_ENABLED` vale `true`. Utiliza un
-runner **self-hosted** Linux con etiqueta `smartcampus-deploy`, instalado en el
-servidor autorizado y con Docker Compose. Compose conserva los datos en un
-volumen local y configura los servicios para reiniciarse. Conviene proteger el
-entorno `production` con aprobación y limitar quién puede modificar workflows
-o desplegar a `main`.
+Los parámetros locales se documentan en `.env.example`; el archivo `.env` real está excluido mediante `.gitignore`. GitHub Actions utiliza el token proporcionado por GitHub (`GITHUB_TOKEN`) para una operación autenticada de solo lectura y el Secret del repositorio `DATABASE_URL` en el trabajo de despliegue. **Nunca** se imprimen valores de secretos en logs ni se incorporan al código. La URL SQLite utilizada como valor de prueba no es una credencial sensible; en un despliegue real debería emplearse un secreto que contenga credenciales auténticas, cuando corresponda.
 
-El despliegue no se ha ejecutado. Antes de habilitarlo faltan confirmar el
-servidor Linux autorizado, el runner persistente y sus etiquetas, los puertos
-disponibles, el motor/base de datos deseados y la política de aprobación y
-acceso al repositorio. Se requiere autorización expresa antes de configurarlo o
-ejecutarlo.
+### Despliegue automático temporal
+
+En la rama `feat/deploy-automatico` se preparó un cambio del trabajo `deploy` para ejecutarse **únicamente en pushes a `main`**, después de que terminen correctamente `tests` y `docker`. La versión modificada usa `ubuntu-latest`, construye y arranca backend y frontend mediante `docker compose up --detach --build --wait`, verifica las rutas `/health`, `/rooms` y `/`, guarda logs como artefacto y finalmente detiene los contenedores. Emplea los puertos `18000` (API) y `18080` (frontend).
+
+**Estado de verificación:** el push de la rama pasó 24 tests localmente y el Pull Request mostró 8/8 comprobaciones correctas. No se afirma aquí que el trabajo `deploy` haya terminado correctamente en `main`: debe comprobarse en la pestaña **Actions** después de fusionar el Pull Request.
+
+**Limitación importante del enunciado:** los contenedores iniciados en un runner temporal de GitHub desaparecen al terminar el trabajo. Por ello, este mecanismo valida la automatización, pero **no constituye un despliegue persistente**. Para cumplir esa exigencia se necesita un runner `self-hosted` en un equipo servidor, una VM por SSH u otro mecanismo autorizado expresamente por el profesor. No se ha acreditado un despliegue persistente.
+
+### Cómo comprobar el pipeline
+
+1. Abrir **GitHub → Pull requests** y comprobar que los trabajos obligatorios del PR estén correctos.
+2. Fusionar el PR en `main` solo si las comprobaciones requeridas han pasado.
+3. Abrir **GitHub → Actions**, seleccionar la ejecución de `main` y revisar `tests`, `docker` y `deploy`.
+4. En `deploy`, revisar la salida de los comandos `curl`, el estado de los contenedores y el artefacto `smartcampus-deploy-logs`.
+5. Si falla un trabajo, consultar sus logs antes de declarar el despliegue completado.
+
+## Flujo de trabajo con Git y Pull Requests
+
+El desarrollo se organiza en ramas y commits descriptivos. La rama `feat/deploy-automatico` contiene la mejora del pipeline y se integrará en `main` mediante un Pull Request tras pasar las comprobaciones. El uso de ramas y Pull Requests forma parte de las buenas prácticas valoradas por el enunciado.
+
+Ejemplos de comandos:
+
+```powershell
+git status
+git checkout -b feat/nueva-funcionalidad
+git add .
+git commit -m "feat: añadir funcionalidad"
+# Ejecutar push solo después de revisar los cambios:
+git push -u origin feat/nueva-funcionalidad
+```
 
 ## Kubernetes existente
 
@@ -272,7 +285,6 @@ Guarda capturas propias de:
    antes el alcance.
 7. El resumen de un run real de GitHub Actions, después de ejecutarlo en
    GitHub; no se debe presentar una ejecución local como resultado del workflow.
-8. El job de despliegue solo si se autoriza y configura un servidor persistente.
-
-No incluyas `.env`, contraseñas, tokens, `k8s/secret.yaml` ni datos sensibles en
-capturas o evidencias.
+8. El trabajo `deploy` en Actions (si se ejecuta en `main`), sus verificaciones HTTP y los logs; distinguirlo de un despliegue persistente.
+9. El Pull Request con sus comprobaciones aprobadas y la fusión en `main`.
+10. La configuración de GitHub Secrets mostrando únicamente los nombres, nunca los valores.
