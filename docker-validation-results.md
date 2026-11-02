@@ -1,6 +1,10 @@
-# Resultados de validación Docker Compose
+# Historial de validación Docker Compose
 
-Fecha de ejecución: 31-10-2026.
+## Validación anterior: 31-10-2026
+
+Los resultados siguientes corresponden a la configuración anterior, en la que
+PostgreSQL era obligatorio. Se conservan como histórico y no describen el modo
+SQLite predeterminado añadido el 02-11-2026.
 
 ## Configuración
 
@@ -47,3 +51,27 @@ Los registros muestran que `init.sql` se ejecutó en la inicialización y que, a
 ## Credenciales
 
 Se creó `.env` con credenciales exclusivamente locales de desarrollo. `.gitignore` excluye `.env`; no se copiaron sus valores en este informe.
+
+## Validación actual: 02-11-2026
+
+Entorno local: Docker 29.8.0 y Docker Compose v5.5.1. La configuración
+predeterminada y el perfil opcional `postgres` pasaron `docker compose config
+--quiet`. Se construyeron correctamente las imágenes de backend y frontend con
+el `.dockerignore` activo.
+
+Para no alterar los servicios que ya estaban ejecutándose en el equipo, la
+prueba usó el proyecto Compose aislado `smartcampus-ci-validation`, SQLite y
+los puertos locales `18800` y `18080`.
+
+| Comprobación | Resultado observado |
+|---|---|
+| Construcción backend y frontend | Correcta |
+| Healthcheck del backend (`GET /health`) | `healthy`; respuesta `{"status":"ok"}` |
+| Healthcheck del frontend | `healthy` |
+| Creación de aula y reserva | Correcta, HTTP `201` |
+| Frontend | HTTP `200` |
+| Persistencia SQLite | El aula y la reserva continuaron tras reiniciar el backend |
+| Limpieza de la prueba | Los servicios aislados quedaron detenidos; se conservaron sus volúmenes |
+
+No se ejecutó el perfil PostgreSQL ni se realizó ningún despliegue externo.
+GitHub Actions tampoco se ha ejecutado desde este entorno.

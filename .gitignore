@@ -11,3 +11,9 @@ k8s/secret.yaml
 
 # Copias de seguridad locales
 backups/
+backend/.env.sqlite
+*.db
+*.sqlite
+*.sqlite3
+commit-log.txt
+.ruff_cache/

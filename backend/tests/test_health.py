@@ -1,21 +1,9 @@
-from collections.abc import Iterator
 from datetime import date, time
 
-import pytest
 from fastapi.testclient import TestClient
 
-from app.db.connection import Base, SessionLocal, engine
-from app.main import app
+from app.db.connection import SessionLocal
 from app.models import Booking, Room
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with TestClient(app) as test_client:
-        yield test_client
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_health_returns_ok(client: TestClient) -> None:

@@ -1,26 +1,26 @@
-# Backend de SmartCampus
+# Backend SmartCampus
 
-API REST desarrollada con FastAPI, SQLAlchemy y PostgreSQL. Las tablas `rooms` y `bookings` se crean automáticamente al iniciar la aplicación, sin Alembic.
+API REST con FastAPI, SQLAlchemy y Pydantic. SQLite es la base de datos
+predeterminada para desarrollo local y pruebas; también se admite PostgreSQL
+mediante `DATABASE_URL` y el controlador `psycopg`. Las tablas se crean al
+iniciar la aplicación.
 
-## Configuración
+Desde esta carpeta, crea un entorno virtual, instala las dependencias de
+desarrollo y arranca la API:
 
-Define `DATABASE_URL` en el entorno antes de iniciar la API. El formato recomendado con el controlador incluido es:
-
-```text
-postgresql+psycopg://USUARIO:CONTRASENA@HOST:5432/BASE_DE_DATOS
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+$env:DATABASE_URL = "sqlite+pysqlite:///./smartcampus.db"
+python -m uvicorn app.main:app --reload
 ```
 
-Los valores anteriores son marcadores de posición; no guardes credenciales reales en el código ni en el repositorio.
+Valida el código con `python -m ruff check app tests`,
+`python -m ruff format --check app tests` y `python -m pytest -q`. Las pruebas
+usan una base SQLite en memoria aislada de la base local.
 
-## Ejecución y pruebas
-
-Desde esta carpeta, instala las dependencias con `pip install -r requirements.txt`. Inicia la API con `uvicorn app.main:app --reload` y ejecuta las pruebas con `pytest`.
-
-Las pruebas configuran SQLite en memoria para no requerir una instancia de PostgreSQL.
-
-## Endpoints
-
-- `GET /health`
-- `GET /rooms`
-- `GET /rooms/{id}`
-- `GET /bookings`
+Endpoints: `GET /health`, `GET /rooms`, `GET /rooms/{id}`, `POST /rooms`,
+`DELETE /rooms/{id}`, `GET /bookings`, `POST /bookings` y
+`DELETE /bookings/{id}`. La referencia de estados, Docker y GitHub Actions está
+en el [README del proyecto](../README.md).

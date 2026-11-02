@@ -1,0 +1,96 @@
+name: CI y despliegue SmartCampus
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Pruebas Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Obtener el repositorio
+        uses: actions/checkout@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements-dev.txt
+      - name: Comprobar lint y formato
+        run: |
+          python -m ruff check app tests
+          python -m ruff format --check app tests
+      - name: Ejecutar pruebas unitarias e integración
+        run: python -m pytest -q
+
+  docker:
+    name: Construir y validar Docker
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Obtener el repositorio
+        uses: actions/checkout@v4
+      - name: Comprobar acceso autenticado a GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api rate_limit --jq '.resources.core.remaining'
+      - name: Validar configuración de Compose
+        run: docker compose config --quiet
+      - name: Construir backend y frontend
+        run: docker compose build backend frontend
+      - name: Validar salud real del contenedor backend
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/smartcampus-data"
+          trap 'docker rm -f smartcampus-ci >/dev/null 2>&1 || true' EXIT
+          docker run --detach \
+            --name smartcampus-ci \
+            --publish 127.0.0.1:8000:8000 \
+            --env DATABASE_URL=sqlite+pysqlite:////data/smartcampus.db \
+            --volume "$RUNNER_TEMP/smartcampus-data:/data" \
+            smartcampus-backend:latest
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              printf '\n'
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs smartcampus-ci
+          exit 1
+
+  deploy:
+    name: Despliegue persistente (opcional)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: [tests, docker]
+    runs-on: [self-hosted, linux, smartcampus-deploy]
+    environment: production
+    steps:
+      - name: Obtener el repositorio
+        uses: actions/checkout@v4
+      - name: Actualizar servicios persistentes
+        env:
+          API_PORT: ${{ vars.API_PORT }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: docker compose up --detach --build backend frontend
+      - name: Verificar backend desplegado
+        run: |
+          docker compose ps
+          docker compose exec --no-TTY backend python -c \
+            "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"

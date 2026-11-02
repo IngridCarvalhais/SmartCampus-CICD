@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+author=$(git -C "$repo_root" log -1 --format=%an)
+date=$(git -C "$repo_root" log -1 --format=%aI)
+commit=$(git -C "$repo_root" log -1 --format=%H)
+message=$(git -C "$repo_root" log -1 --format=%s)
+
+printf '%s\t%s\t%s\t%s\n' "$author" "$date" "$commit" "$message" \
+    >> "$repo_root/commit-log.txt"
