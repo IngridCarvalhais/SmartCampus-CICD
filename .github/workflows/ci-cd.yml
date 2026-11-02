@@ -35,7 +35,7 @@ jobs:
         run: |
           python -m ruff check app tests
           python -m ruff format --check app tests
-      - name: Ejecutar pruebas unitarias e integración
+      - name: Ejecutar pruebas unitarias e integraciÃƒÆ’Ã‚Â³n
         run: python -m pytest -q
 
   docker:
@@ -49,7 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh api rate_limit --jq '.resources.core.remaining'
-      - name: Validar configuración de Compose
+      - name: Validar configuraciÃƒÆ’Ã‚Â³n de Compose
         run: docker compose config --quiet
       - name: Construir backend y frontend
         run: docker compose build backend frontend
@@ -75,22 +75,43 @@ jobs:
           exit 1
 
   deploy:
-    name: Despliegue persistente (opcional)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    name: Despliegue automatico temporal
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [tests, docker]
-    runs-on: [self-hosted, linux, smartcampus-deploy]
-    environment: production
+    runs-on: ubuntu-latest
     steps:
       - name: Obtener el repositorio
         uses: actions/checkout@v4
-      - name: Actualizar servicios persistentes
+
+
+      - name: Desplegar SmartCampus con Docker Compose
         env:
-          API_PORT: ${{ vars.API_PORT }}
-          FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+          API_PORT: "18000"
+          FRONTEND_PORT: "18080"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: docker compose up --detach --build backend frontend
-      - name: Verificar backend desplegado
+        run: docker compose up --detach --build --wait backend frontend
+
+      - name: Verificar backend y frontend
         run: |
-          docker compose ps
-          docker compose exec --no-TTY backend python -c \
-            "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+          curl --fail http://127.0.0.1:18000/health
+          curl --fail http://127.0.0.1:18000/rooms
+          curl --fail http://127.0.0.1:18080/
+
+      - name: Mostrar estado de los contenedores
+        if: always()
+        run: docker compose ps
+
+      - name: Guardar logs del despliegue
+        if: always()
+        run: docker compose logs --no-color > deploy-logs.txt
+
+      - name: Publicar evidencia del despliegue
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartcampus-deploy-logs
+          path: deploy-logs.txt
+
+      - name: Detener contenedores temporales
+        if: always()
+        run: docker compose down
